@@ -276,3 +276,67 @@ const MyListingsPage = () => {
     }
   };
  
+  return (
+    <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 py-12">
+      {deleteTarget && (
+        <DeleteModal
+          room={deleteTarget}
+          onConfirm={handleDelete}
+          onClose={() => setDeleteTarget(null)}
+          loading={actionLoading}
+        />
+      )}
+      {editTarget && (
+        <EditModal
+          room={editTarget}
+          onSave={handleUpdate}
+          onClose={() => setEditTarget(null)}
+          loading={actionLoading}
+        />
+      )}
+ 
+      <div className="max-w-7xl mx-auto px-4">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-4xl font-bold">My Listings</h1>
+            <p className="text-slate-400 text-sm mt-1">
+              {rooms.length} room{rooms.length !== 1 ? "s" : ""} listed
+            </p>
+          </div>
+          <Link
+            href="/add-room"
+            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition"
+          >
+            <FiPlus /> Add Room
+          </Link>
+        </div>
+ 
+        {/* Loading */}
+        {loading && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {[...Array(6)].map((_, i) => (
+              <div
+                key={i}
+                className="animate-pulse bg-white dark:bg-zinc-900 rounded-3xl h-72"
+              />
+            ))}
+          </div>
+        )}
+ 
+        {/* Empty */}
+        {!loading && rooms.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-28 text-center">
+            <div className="text-6xl mb-4">🏠</div>
+            <h3 className="text-xl font-semibold mb-1">No listings yet</h3>
+            <p className="text-slate-400 text-sm mb-5">
+              List a room and start earning.
+            </p>
+            <Link
+              href="/add-room"
+              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-5 py-2.5 rounded-xl transition"
+            >
+              <FiPlus /> Add Your First Room
+            </Link>
+          </div>
+        )}
