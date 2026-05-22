@@ -168,3 +168,27 @@ function EditModal({ room, onSave, onClose, loading }) {
     </div>
   );
 }
+
+
+function AmenityChips({ amenities = [] }) {
+  const visible = amenities.slice(0, 3);
+  const extra = amenities.length - 3;
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {visible.map((a) => (
+        <span
+          key={a}
+          className="text-xs px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400"
+        >
+          {a}
+        </span>
+      ))}
+      {extra > 0 && (
+        <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-zinc-800 text-slate-500">
+          +{extra} more
+        </span>
+      )}
+    </div>
+  );
+}
+ 
