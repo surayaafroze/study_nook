@@ -58,3 +58,90 @@ function CancelModal({ booking, onConfirm, onClose, loading }) {
   );
 }
  
+
+function StatusBadge({ status }) {
+  const styles =
+    status === "confirmed"
+      ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
+      : "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400";
+  return (
+    <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${styles}`}>
+      {status === "confirmed" ? "Confirmed" : "Cancelled"}
+    </span>
+  );
+}
+ 
+/* ─────────────────────────────────────────────
+   Main Page
+───────────────────────────────────────────── */
+const MyBookings = () => {
+  const { data: session } = useSession();
+  const user = session?.user;
+ 
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [cancelTarget, setCancelTarget] = useState(null); // booking object
+  const [cancelLoading, setCancelLoading] = useState(false);
+ 
+  /* fetch bookings */
+  useEffect(() => {
+    if (!user?.id) return;
+ 
+    const fetchBookings = async () => {
+      setLoading(true);
+      try {
+        const token = session?.session?.token; // adjust based on your auth lib
+        const res = await fetch(`http://localhost:5000/bookings/${user.id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error("Failed to fetch");
+        const data = await res.json();
+        setBookings(Array.isArray(data) ? data : []);
+      } catch {
+        toast.error("Could not load bookings");
+        setBookings([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+ 
+    fetchBookings();
+  }, [user?.id]);
+ 
+  /* cancel handler */
+  const handleCancel = async () => {
+    if (!cancelTarget) return;
+    setCancelLoading(true);
+    try {
+      const token = session?.session?.token;
+      const res = await fetch(
+        `http://localhost:5000/bookings/${cancelTarget._id}/cancel`,
+        {
+          method: "PATCH",
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Cancel failed");
+      }
+      setBookings((prev) =>
+        prev.map((b) =>
+          b._id === cancelTarget._id ? { ...b, status: "cancelled" } : b
+        )
+      );
+      toast.success("Booking cancelled");
+    } catch (err) {
+      toast.error(err.message || "Something went wrong");
+    } finally {
+      setCancelLoading(false);
+      setCancelTarget(null);
+    }
+  };
+ 
+  /* stats */
+  const confirmed = bookings.filter((b) => b.status === "confirmed").length;
+  const cancelled = bookings.filter((b) => b.status === "cancelled").length;
+  const totalSpent = bookings
+    .filter((b) => b.status === "confirmed")
+    .reduce((sum, b) => sum + (Number(b.totalCost) || 0), 0);
