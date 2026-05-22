@@ -192,3 +192,37 @@ function AmenityChips({ amenities = [] }) {
   );
 }
  
+
+const MyListingsPage = () => {
+  const { data: session } = useSession();
+  const user = session?.user;
+ 
+  const [rooms, setRooms] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [editTarget, setEditTarget] = useState(null);
+  const [actionLoading, setActionLoading] = useState(false);
+ 
+  const token = session?.session?.token; // adjust based on your auth library
+ 
+  /* fetch my rooms */
+  useEffect(() => {
+    if (!user?.id) return;
+    const fetchMyRooms = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch("http://localhost:5000/my-rooms", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error("Failed");
+        const data = await res.json();
+        setRooms(Array.isArray(data) ? data : []);
+      } catch {
+        toast.error("Could not load your listings");
+        setRooms([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMyRooms();
+  }, [user?.id]);
