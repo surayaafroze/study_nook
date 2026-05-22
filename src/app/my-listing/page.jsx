@@ -247,3 +247,32 @@ const MyListingsPage = () => {
       setDeleteTarget(null);
     }
   };
+
+  const handleUpdate = async (formData) => {
+    if (!editTarget) return;
+    setActionLoading(true);
+    try {
+      const res = await fetch(`http://localhost:5000/room/${editTarget._id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(formData),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.message || "Update failed");
+      setRooms((prev) =>
+        prev.map((r) =>
+          r._id === editTarget._id ? { ...r, ...formData } : r
+        )
+      );
+      toast.success("Room updated successfully");
+    } catch (err) {
+      toast.error(err.message || "Something went wrong");
+    } finally {
+      setActionLoading(false);
+      setEditTarget(null);
+    }
+  };
+ 
