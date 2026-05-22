@@ -145,3 +145,172 @@ const MyBookings = () => {
   const totalSpent = bookings
     .filter((b) => b.status === "confirmed")
     .reduce((sum, b) => sum + (Number(b.totalCost) || 0), 0);
+
+
+     return (
+    <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 py-12">
+      {cancelTarget && (
+        <CancelModal
+          booking={cancelTarget}
+          onConfirm={handleCancel}
+          onClose={() => setCancelTarget(null)}
+          loading={cancelLoading}
+        />
+      )}
+ 
+      <div className="max-w-7xl mx-auto px-4 flex flex-col lg:flex-row gap-10">
+        {/* ── LEFT: Bookings ── */}
+        <div className="flex-1">
+          <h1 className="text-4xl font-bold mb-2">My Bookings</h1>
+          <p className="text-slate-400 text-sm mb-8">
+            {bookings.length} booking{bookings.length !== 1 ? "s" : ""} total
+          </p>
+ 
+          {loading ? (
+            <div className="space-y-5">
+              {[...Array(3)].map((_, i) => (
+                <div
+                  key={i}
+                  className="animate-pulse bg-white dark:bg-zinc-900 rounded-3xl h-44"
+                />
+              ))}
+            </div>
+          ) : bookings.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-24 text-center">
+              <div className="text-6xl mb-4">📅</div>
+              <h3 className="text-xl font-semibold mb-1">No bookings yet</h3>
+              <p className="text-slate-400 text-sm">
+                Browse rooms and book your perfect study spot.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-5">
+              {bookings.map((b) => (
+                <div
+                  key={b._id}
+                  className="flex flex-col md:flex-row bg-white dark:bg-zinc-900 rounded-3xl overflow-hidden shadow-sm border border-slate-100 dark:border-zinc-800 hover:shadow-md transition-shadow"
+                >
+                  {/* image */}
+                  <div className="relative w-full md:w-56 h-48 md:h-auto shrink-0">
+                    <Image
+                      src={b.image || "https://placehold.co/600x400?text=Room"}
+                      alt={b.roomName || "Room"}
+                      fill
+                      className="object-cover"
+                      unoptimized
+                    />
+                  </div>
+ 
+                  {/* content */}
+                  <div className="p-5 flex-1 flex flex-col justify-between gap-3">
+                    <div>
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <h2 className="text-xl font-bold leading-tight">
+                          {b.roomName}
+                        </h2>
+                        <StatusBadge status={b.status} />
+                      </div>
+                      <p className="text-sm text-slate-400 line-clamp-2">
+                        {b.description}
+                      </p>
+                    </div>
+ 
+                    {/* booking details */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm">
+                      <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-zinc-800 rounded-xl px-3 py-2">
+                        <FiCalendar size={14} className="text-indigo-400" />
+                        <span className="font-medium">{b.date || "—"}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-zinc-800 rounded-xl px-3 py-2">
+                        <FiClock size={14} className="text-indigo-400" />
+                        <span className="font-medium">
+                          {b.startTime} – {b.endTime}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl px-3 py-2">
+                        <span className="text-emerald-600 font-semibold">
+                          ${Number(b.totalCost || 0).toFixed(2)}
+                        </span>
+                      </div>
+                      {b.floor && (
+                        <div className="flex items-center gap-1.5 text-slate-400">
+                          <FiMapPin size={13} /> {b.floor}
+                        </div>
+                      )}
+                      {b.capacity && (
+                        <div className="flex items-center gap-1.5 text-slate-400">
+                          <FiUsers size={13} /> {b.capacity} seats
+                        </div>
+                      )}
+                    </div>
+ 
+                    {b.specialNote && (
+                      <p className="text-xs text-slate-400 italic border-l-2 border-indigo-300 pl-2">
+                        "{b.specialNote}"
+                      </p>
+                    )}
+ 
+                    {/* cancel button */}
+                    {b.status === "confirmed" && isFuture(b.date) && (
+                      <div className="flex justify-end">
+                        <button
+                          onClick={() => setCancelTarget(b)}
+                          className="flex items-center gap-1.5 text-sm text-red-500 hover:text-red-600 border border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl px-4 py-1.5 transition"
+                        >
+                          <FiX size={14} /> Cancel Booking
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+ 
+        {/* ── RIGHT: User Info + Stats ── */}
+        <div className="w-full lg:w-72 space-y-4">
+          {/* Profile Card */}
+          <div className="bg-white dark:bg-zinc-900 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-zinc-800 text-center">
+            <img
+              src={user?.image || "https://placehold.co/96x96"}
+              className="w-20 h-20 rounded-full mx-auto object-cover ring-2 ring-indigo-200"
+              alt={user?.name}
+            />
+            <h2 className="mt-3 font-bold text-lg">{user?.name}</h2>
+            <p className="text-sm text-slate-400 flex justify-center items-center gap-1 mt-1">
+              <FiMail size={13} /> {user?.email}
+            </p>
+          </div>
+ 
+          {/* Stats Card */}
+          <div className="bg-white dark:bg-zinc-900 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-zinc-800 space-y-4">
+            <h3 className="font-semibold text-sm text-slate-400 uppercase tracking-wider">
+              Overview
+            </h3>
+            <div className="space-y-3 text-sm">
+              <div className="flex justify-between">
+                <span className="text-slate-500">Total Bookings</span>
+                <b>{bookings.length}</b>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Confirmed</span>
+                <b className="text-emerald-600">{confirmed}</b>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Cancelled</span>
+                <b className="text-red-500">{cancelled}</b>
+              </div>
+              <div className="border-t border-slate-100 dark:border-zinc-800 pt-3 flex justify-between">
+                <span className="text-slate-500">Total Spent</span>
+                <b className="text-indigo-600">${totalSpent.toFixed(2)}</b>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+ 
+export default MyBookings;
