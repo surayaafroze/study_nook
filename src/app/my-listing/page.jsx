@@ -390,5 +390,29 @@ const MyListingsPage = () => {
  
                   <AmenityChips amenities={room.amenities} />
  
-
+ <div className="flex gap-2 mt-auto pt-2">
+                    <button
+                      onClick={() => setEditTarget(room)}
+                      className="flex-1 flex items-center justify-center gap-1.5 text-sm border border-slate-200 dark:border-zinc-700 hover:bg-slate-50 dark:hover:bg-zinc-800 rounded-xl py-2 transition"
+                    >
+                      <FiEdit2 size={14} /> Edit
+                    </button>
+                    <button
+                      onClick={() => setDeleteTarget(room)}
+                      className="flex-1 flex items-center justify-center gap-1.5 text-sm text-red-500 border border-red-100 dark:border-red-900/30 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl py-2 transition"
+                    >
+                      <FiTrash2 size={14} /> Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+ 
+export default MyListingsPage;
 
