@@ -226,3 +226,24 @@ const MyListingsPage = () => {
     };
     fetchMyRooms();
   }, [user?.id]);
+
+
+   const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setActionLoading(true);
+    try {
+      const res = await fetch(`http://localhost:5000/room/${deleteTarget._id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.message || "Delete failed");
+      setRooms((prev) => prev.filter((r) => r._id !== deleteTarget._id));
+      toast.success("Room deleted successfully");
+    } catch (err) {
+      toast.error(err.message || "Something went wrong");
+    } finally {
+      setActionLoading(false);
+      setDeleteTarget(null);
+    }
+  };
