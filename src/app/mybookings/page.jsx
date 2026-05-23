@@ -17,6 +17,9 @@ function isFuture(dateStr) {
 }
 
 function CancelModal({ booking, onConfirm, onClose, loading }) {
+
+
+  
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
       <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-md p-6">

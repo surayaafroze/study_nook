@@ -1,6 +1,8 @@
+// import { headers } from 'next/headers';
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server'
 import { auth } from './lib/auth';
+// import { auth } from './lib/auth';
 
  
 // This function can be marked `async` if using `await` inside
@@ -9,10 +11,12 @@ export async function proxy(request) {
     
     headers: await headers() // headers containing the user's session token
 });
- if(session && !session?.user){
-  console.log(request.url,"from proxy")
-  return NextResponse.redirect(new URL('/',request.url));
- }
+const userr = session?.user
+console.log(userr,"user login")
+ if (!session?.user) {
+  console.log(userr,"user login")
+  return NextResponse.redirect(new URL('/login', request.url));
+}
 }
  
 export const config = {

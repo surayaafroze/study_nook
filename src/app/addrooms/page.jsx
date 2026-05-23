@@ -1,149 +1,245 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
+import { FiPlus, FiCheck } from 'react-icons/fi';
+import { authClient } from '@/lib/auth-client';
 
-export default function AddRoomPage() {
+const AMENITY_OPTIONS = [
+  'Whiteboard',
+  'Projector',
+  'Wi-Fi',
+  'Power Outlets',
+  'Quiet Zone',
+  'Air Conditioning',
+];
+
+const AddRoomPage = () => {
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
-  const onSubmit = async (e) => {
-    e.preventDefault();
+  const [form, setForm] = useState({
+    roomName: '',
+    description: '',
+    image: '',
+    floor: '',
+    capacity: '',
+    hourlyRate: '',
+    amenities: [],
+  });
 
-    const formdata = new FormData(e.currentTarget);
-
-    // ✅ get all checkbox values as array
-const amenities = formdata.getAll("amenities");
-
-const addRooms = {
-  roomName: formdata.get("roomName"),
-  description: formdata.get("description"),
-  image: formdata.get("image"),
-  floor: formdata.get("floor"),
-  capacity: Number(formdata.get("capacity")),
-  hourlyRate: Number(formdata.get("hourlyRate")),
-  amenities,
-};
-
-    console.log(addRooms);
-
-    const res = await fetch("http://localhost:5000/addroom", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-      },
-      body: JSON.stringify(addRooms),
-    });
-
-    const data = await res.json();
-    console.log(data);
-
-    // redirect after success
-    router.push("/room");
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const amenitiesOptions = [
-    "Whiteboard",
-    "Projector",
-    "Wi-Fi",
-    "Power Outlets",
-    "Quiet Zone",
-    "Air Conditioning",
-  ];
+  const toggleAmenity = (amenity) => {
+    setForm((prev) => ({
+      ...prev,
+      amenities: prev.amenities.includes(amenity)
+        ? prev.amenities.filter((a) => a !== amenity)
+        : [...prev.amenities, amenity],
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    const { data: tokenData } = await authClient.token();
+    e.preventDefault();
+
+    // validation
+    if (!form.roomName.trim() || !form.description.trim()) {
+      toast.error('Room name and description are required.');
+      return;
+    }
+
+    const capacity = Number(form.capacity);
+    const hourlyRate = Number(form.hourlyRate);
+
+    if (!Number.isFinite(capacity) || !Number.isFinite(hourlyRate)) {
+      toast.error('Capacity and hourly rate must be valid numbers.');
+      return;
+    }
+
+    if (capacity <= 0 || hourlyRate <= 0) {
+      toast.error('Capacity and hourly rate must be greater than 0.');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/room`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            authorization: `Bearer ${tokenData?.token}`,
+          },
+          body: JSON.stringify({
+            roomName: form.roomName.trim(),
+            description: form.description.trim(),
+            image: form.image?.trim() || '',
+            floor: form.floor?.trim() || '',
+            capacity,
+            hourlyRate,
+            amenities: form.amenities,
+          }),
+        }
+      );
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        throw new Error(data.message || 'Failed to add room');
+      }
+
+      toast.success('Room added successfully!');
+      router.push('/my-listing');
+    } catch (err) {
+      toast.error(err?.message || 'Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 py-10 px-4">
-      <div className="max-w-3xl mx-auto bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 space-y-6">
+    <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 py-10">
+      <div className="max-w-2xl mx-auto px-4">
 
-        {/* Header */}
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-            Add New Room
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-slate-800 dark:text-white">
+            Add a Room
           </h1>
-          <p className="text-sm text-slate-500 dark:text-zinc-400">
-            Create a study room listing
+          <p className="text-slate-500 dark:text-zinc-400 text-sm mt-1">
+            Fill in the details below to list your study room.
           </p>
         </div>
 
-        {/* Form */}
-        <form onSubmit={onSubmit} className="space-y-5">
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white dark:bg-zinc-900 rounded-2xl border border-slate-100 dark:border-zinc-800 shadow-sm p-6 space-y-5"
+        >
 
-          <input
-            type="text"
-            name="roomName"
-            placeholder="Room Name"
-            className="w-full p-3 border rounded-lg bg-white dark:bg-zinc-950"
-            required
-          />
-
-          <textarea
-            name="description"
-            placeholder="Description"
-            rows={4}
-            className="w-full p-3 border rounded-lg bg-white dark:bg-zinc-950"
-            required
-          />
-
-          <input
-            type="url"
-            name="image"
-            placeholder="Image URL"
-            className="w-full p-3 border rounded-lg bg-white dark:bg-zinc-950"
-            required
-          />
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-
+          {/* Room Name */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-zinc-300 mb-1.5">
+              Room Name <span className="text-red-500">*</span>
+            </label>
             <input
               type="text"
-              name="floor"
-              placeholder="Floor"
-              className="p-3 border rounded-lg bg-white dark:bg-zinc-950"
+              name="roomName"
+              value={form.roomName}
+              onChange={handleChange}
+              className="w-full px-4 py-2.5 rounded-xl border bg-transparent text-sm"
               required
+            />
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-zinc-300 mb-1.5">
+              Description <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              name="description"
+              value={form.description}
+              onChange={handleChange}
+              rows={4}
+              className="w-full px-4 py-2.5 rounded-xl border bg-transparent text-sm resize-none"
+              required
+            />
+          </div>
+
+          {/* Image */}
+          <div>
+            <label className="block text-sm font-medium">Image URL</label>
+            <input
+              type="text"
+              name="image"
+              value={form.image}
+              onChange={handleChange}
+              className="w-full px-4 py-2.5 rounded-xl border bg-transparent text-sm"
+            />
+          </div>
+
+          {/* Floor / Capacity / Rate */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <input
+              name="floor"
+              value={form.floor}
+              onChange={handleChange}
+              placeholder="Floor"
+              className="px-4 py-2.5 rounded-xl border bg-transparent text-sm"
             />
 
             <input
               type="number"
               name="capacity"
-              min="1"
+              value={form.capacity}
+              onChange={handleChange}
               placeholder="Capacity"
-              className="p-3 border rounded-lg bg-white dark:bg-zinc-950"
-              required
+              className="px-4 py-2.5 rounded-xl border bg-transparent text-sm"
             />
 
             <input
               type="number"
               name="hourlyRate"
-              min="1"
-              placeholder="Hourly Rate"
-              className="p-3 border rounded-lg bg-white dark:bg-zinc-950"
-              required
+              value={form.hourlyRate}
+              onChange={handleChange}
+              placeholder="Rate"
+              className="px-4 py-2.5 rounded-xl border bg-transparent text-sm"
             />
           </div>
 
           {/* Amenities */}
-          <div className="grid grid-cols-2 gap-2">
-            {amenitiesOptions.map((item) => (
-              <label
-                key={item}
-                className="flex items-center gap-2 p-2 border rounded-lg cursor-pointer"
-              >
-                <input type="checkbox" name="amenities" value={item} />
-                <span>{item}</span>
-              </label>
-            ))}
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Amenities
+            </label>
+
+            <div className="flex flex-wrap gap-2">
+              {AMENITY_OPTIONS.map((amenity) => {
+                const selected = form.amenities.includes(amenity);
+
+                return (
+                  <button
+                    key={amenity}
+                    type="button"
+                    onClick={() => toggleAmenity(amenity)}
+                    className={`px-3 py-1.5 rounded-full border text-sm flex items-center gap-1 ${
+                      selected
+                        ? 'bg-indigo-600 text-white border-indigo-600'
+                        : ''
+                    }`}
+                  >
+                    {selected && <FiCheck size={12} />}
+                    {amenity}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
-          {/* Button */}
-          <Link href='/my-listing'>
+          {/* Submit */}
           <button
             type="submit"
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-lg transition"
+            disabled={loading}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-indigo-600 text-white"
           >
-            Add Room
+            {loading ? 'Adding...' : (
+              <>
+                <FiPlus size={16} />
+                Add Room
+              </>
+            )}
           </button>
-          </Link>
+
         </form>
       </div>
     </div>
   );
-}
+};
+
+export default AddRoomPage;
