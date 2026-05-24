@@ -2,9 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import toast from 'react-hot-toast';
-import { FiPlus, FiCheck } from 'react-icons/fi';
 import { authClient } from '@/lib/auth-client';
+import { FiCheck } from 'react-icons/fi';
 
 const AMENITY_OPTIONS = [
   'Whiteboard',
@@ -29,11 +28,21 @@ const AddRoomPage = () => {
     amenities: [],
   });
 
+  // -----------------------
+  // Handle Input Change
+  // -----------------------
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
+  // -----------------------
+  // Toggle Amenities
+  // -----------------------
   const toggleAmenity = (amenity) => {
     setForm((prev) => ({
       ...prev,
@@ -43,45 +52,54 @@ const AddRoomPage = () => {
     }));
   };
 
+  // -----------------------
+  // Submit Handler
+  // -----------------------
   const handleSubmit = async (e) => {
-    const { data: tokenData } = await authClient.token();
     e.preventDefault();
 
-    // validation
-    if (!form.roomName.trim() || !form.description.trim()) {
-      toast.error('Room name and description are required.');
-      return;
-    }
-
-    const capacity = Number(form.capacity);
-    const hourlyRate = Number(form.hourlyRate);
-
-    if (!Number.isFinite(capacity) || !Number.isFinite(hourlyRate)) {
-      toast.error('Capacity and hourly rate must be valid numbers.');
-      return;
-    }
-
-    if (capacity <= 0 || hourlyRate <= 0) {
-      toast.error('Capacity and hourly rate must be greater than 0.');
-      return;
-    }
-
-    setLoading(true);
-
     try {
+      setLoading(true);
+
+      const { data: tokenData } = await authClient.token();
+
+      if (!tokenData?.token) {
+        alert('Unauthorized! Please login again.');
+        return;
+      }
+
+      // validation
+      if (!form.roomName.trim() || !form.description.trim()) {
+        alert('Room name and description are required.');
+        return;
+      }
+
+      const capacity = Number(form.capacity);
+      const hourlyRate = Number(form.hourlyRate);
+
+      if (!Number.isFinite(capacity) || !Number.isFinite(hourlyRate)) {
+        alert('Capacity and hourly rate must be valid numbers.');
+        return;
+      }
+
+      if (capacity <= 0 || hourlyRate <= 0) {
+        alert('Capacity and hourly rate must be greater than 0.');
+        return;
+      }
+
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/room`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            authorization: `Bearer ${tokenData?.token}`,
+            authorization: `Bearer ${tokenData.token}`,
           },
           body: JSON.stringify({
             roomName: form.roomName.trim(),
             description: form.description.trim(),
-            image: form.image?.trim() || '',
-            floor: form.floor?.trim() || '',
+            image: form.image.trim(),
+            floor: form.floor.trim(),
             capacity,
             hourlyRate,
             amenities: form.amenities,
@@ -92,152 +110,118 @@ const AddRoomPage = () => {
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        throw new Error(data.message || 'Failed to add room');
+        throw new Error(data?.message || 'Failed to add room');
       }
 
-      toast.success('Room added successfully!');
+      alert('Room submitted successfully!');
       router.push('/my-listing');
     } catch (err) {
-      toast.error(err?.message || 'Something went wrong. Please try again.');
+      alert(err?.message || 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
+  // -----------------------
+  // UI
+  // -----------------------
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 py-10">
-      <div className="max-w-2xl mx-auto px-4">
+    <div className="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow">
+      <h1 className="text-2xl font-bold mb-6">Add New Room</h1>
 
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-800 dark:text-white">
-            Add a Room
-          </h1>
-          <p className="text-slate-500 dark:text-zinc-400 text-sm mt-1">
-            Fill in the details below to list your study room.
-          </p>
+      <form onSubmit={handleSubmit} className="space-y-4">
+
+        {/* Room Name */}
+        <input
+          type="text"
+          name="roomName"
+          value={form.roomName}
+          onChange={handleChange}
+          placeholder="Room Name"
+          className="w-full border p-2 rounded"
+        />
+
+        {/* Description */}
+        <textarea
+          name="description"
+          value={form.description}
+          onChange={handleChange}
+          placeholder="Description"
+          className="w-full border p-2 rounded"
+        />
+
+        {/* Image */}
+        <input
+          type="text"
+          name="image"
+          value={form.image}
+          onChange={handleChange}
+          placeholder="Image URL"
+          className="w-full border p-2 rounded"
+        />
+
+        {/* Floor */}
+        <input
+          type="text"
+          name="floor"
+          value={form.floor}
+          onChange={handleChange}
+          placeholder="Floor"
+          className="w-full border p-2 rounded"
+        />
+
+        {/* Capacity */}
+        <input
+          type="number"
+          name="capacity"
+          value={form.capacity}
+          onChange={handleChange}
+          placeholder="Capacity"
+          className="w-full border p-2 rounded"
+        />
+
+        {/* Hourly Rate */}
+        <input
+          type="number"
+          name="hourlyRate"
+          value={form.hourlyRate}
+          onChange={handleChange}
+          placeholder="Hourly Rate"
+          className="w-full border p-2 rounded"
+        />
+
+        {/* Amenities */}
+        <div>
+          <p className="font-semibold mb-2">Amenities</p>
+
+          <div className="flex flex-wrap gap-2">
+            {AMENITY_OPTIONS.map((item) => (
+              <button
+                type="button"
+                key={item}
+                onClick={() => toggleAmenity(item)}
+                className={`px-3 py-1 border rounded flex items-center gap-1 ${
+                  form.amenities.includes(item)
+                    ? 'bg-green-100 border-green-500'
+                    : ''
+                }`}
+              >
+                {form.amenities.includes(item) && <FiCheck />}
+                {item}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white dark:bg-zinc-900 rounded-2xl border border-slate-100 dark:border-zinc-800 shadow-sm p-6 space-y-5"
+        {/* Submit Button */}
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 disabled:opacity-50"
         >
-
-          {/* Room Name */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-zinc-300 mb-1.5">
-              Room Name <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              name="roomName"
-              value={form.roomName}
-              onChange={handleChange}
-              className="w-full px-4 py-2.5 rounded-xl border bg-transparent text-sm"
-              required
-            />
-          </div>
-
-          {/* Description */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-zinc-300 mb-1.5">
-              Description <span className="text-red-500">*</span>
-            </label>
-            <textarea
-              name="description"
-              value={form.description}
-              onChange={handleChange}
-              rows={4}
-              className="w-full px-4 py-2.5 rounded-xl border bg-transparent text-sm resize-none"
-              required
-            />
-          </div>
-
-          {/* Image */}
-          <div>
-            <label className="block text-sm font-medium">Image URL</label>
-            <input
-              type="text"
-              name="image"
-              value={form.image}
-              onChange={handleChange}
-              className="w-full px-4 py-2.5 rounded-xl border bg-transparent text-sm"
-            />
-          </div>
-
-          {/* Floor / Capacity / Rate */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <input
-              name="floor"
-              value={form.floor}
-              onChange={handleChange}
-              placeholder="Floor"
-              className="px-4 py-2.5 rounded-xl border bg-transparent text-sm"
-            />
-
-            <input
-              type="number"
-              name="capacity"
-              value={form.capacity}
-              onChange={handleChange}
-              placeholder="Capacity"
-              className="px-4 py-2.5 rounded-xl border bg-transparent text-sm"
-            />
-
-            <input
-              type="number"
-              name="hourlyRate"
-              value={form.hourlyRate}
-              onChange={handleChange}
-              placeholder="Rate"
-              className="px-4 py-2.5 rounded-xl border bg-transparent text-sm"
-            />
-          </div>
-
-          {/* Amenities */}
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              Amenities
-            </label>
-
-            <div className="flex flex-wrap gap-2">
-              {AMENITY_OPTIONS.map((amenity) => {
-                const selected = form.amenities.includes(amenity);
-
-                return (
-                  <button
-                    key={amenity}
-                    type="button"
-                    onClick={() => toggleAmenity(amenity)}
-                    className={`px-3 py-1.5 rounded-full border text-sm flex items-center gap-1 ${
-                      selected
-                        ? 'bg-indigo-600 text-white border-indigo-600'
-                        : ''
-                    }`}
-                  >
-                    {selected && <FiCheck size={12} />}
-                    {amenity}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Submit */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-indigo-600 text-white"
-          >
-            {loading ? 'Adding...' : (
-              <>
-                <FiPlus size={16} />
-                Add Room
-              </>
-            )}
-          </button>
-
-        </form>
-      </div>
+          {loading ? 'Submitting...' : 'Add Room'}
+        </button>
+      </form>
     </div>
   );
 };
