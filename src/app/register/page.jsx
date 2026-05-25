@@ -10,126 +10,335 @@ import {
   Label,
   TextField,
 } from "@heroui/react";
+import { motion, AnimatePresence } from "motion/react";
 import Link from "next/link";
-import { FiBookOpen } from "react-icons/fi";
-import { GrGoogle } from "react-icons/gr";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
+import { FiBookOpen, FiCheckCircle, FiXCircle, FiX } from "react-icons/fi";
 
+/* ═══════════════════════════════════════════
+   TOAST COMPONENT
+═══════════════════════════════════════════ */
+const Toast = ({ toasts, removeToast }) => (
+  <div className="fixed top-5 right-5 z-9999 flex flex-col gap-3 pointer-events-none">
+    <AnimatePresence>
+      {toasts.map((t) => (
+        <motion.div
+          key={t.id}
+          initial={{ opacity: 0, x: 80, scale: 0.9 }}
+          animate={{ opacity: 1, x: 0, scale: 1 }}
+          exit={{ opacity: 0, x: 80, scale: 0.85 }}
+          transition={{ type: "spring", stiffness: 380, damping: 28 }}
+          className={`pointer-events-auto flex items-start gap-3 px-4 py-3.5
+            rounded-2xl shadow-2xl border backdrop-blur-sm min-w-65 max-w-85
+            ${t.type === "success"
+              ? "bg-emerald-50/95 dark:bg-emerald-950/90 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200"
+              : "bg-red-50/95 dark:bg-red-950/90 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200"
+            }`}
+        >
+          {t.type === "success"
+            ? <FiCheckCircle size={18} className="mt-0.5 shrink-0 text-emerald-500" />
+            : <FiXCircle size={18} className="mt-0.5 shrink-0 text-red-500" />
+          }
+          <div className="flex-1 text-sm font-medium leading-snug">{t.msg}</div>
+          <button
+            onClick={() => removeToast(t.id)}
+            className="mt-0.5 shrink-0 opacity-50 hover:opacity-100 transition"
+          >
+            <FiX size={14} />
+          </button>
+        </motion.div>
+      ))}
+    </AnimatePresence>
+  </div>
+);
+
+/* ═══════════════════════════════════════════
+   MAIN PAGE
+═══════════════════════════════════════════ */
 export default function SignUpPage() {
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [toasts, setToasts] = useState([]);
 
+  /* ── toast helpers ── */
+  const addToast = (msg, type = "success") => {
+    // eslint-disable-next-line react-hooks/purity
+    const id = Date.now();
+    setToasts((p) => [...p, { id, msg, type }]);
+    setTimeout(() => removeToast(id), 4000);
+  };
+  const removeToast = (id) =>
+    setToasts((p) => p.filter((t) => t.id !== id));
+
+  /* ── submit ── */
   const onSubmit = async (e) => {
     e.preventDefault();
- console.log("SUBMIT FIRED");
+    console.log("SUBMIT FIRED");
+
     const formData = new FormData(e.currentTarget);
     const user = Object.fromEntries(formData.entries());
 
-    const { data, error } = await authClient.signUp.email({
-      email: user.email,
-      password: user.password,
-      name: user.name,
-      image: user.image,
-    });
+    try {
+      setLoading(true);
 
-    console.log({ data, error });
-    // console.log(user);
+      const { data, error } = await authClient.signUp.email({
+        email: user.email,
+        password: user.password,
+        name: user.name,
+        image: user.image,
+      });
 
-    if (data) {
-      router.push("/login");
+      console.log({ data, error });
+
+      if (error) {
+        addToast(error?.message || "Registration failed. Please try again.", "error");
+      } else if (data) {
+        addToast("Account created! Redirecting to login…", "success");
+        // toast দেখানোর পর login page এ নিয়ে যাবে
+        setTimeout(() => router.push("/login"), 1500);
+      }
+    } catch (err) {
+      addToast("Something went wrong. Please try again.", "error");
+    } finally {
+      setLoading(false);
     }
   };
 
+  /* ── stagger variants ── */
+  const container = {
+    hidden: {},
+    show: { transition: { staggerChildren: 0.07 } },
+  };
+  const item = {
+    hidden: { opacity: 0, y: 16 },
+    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 320, damping: 26 } },
+  };
+
   return (
-    <div className="pb-8">
-      <Card className="border mx-auto w-125 py-10 mt-5">
-        <div className="text-center">
-          <FiBookOpen className="mx-auto h-12 w-12 text-indigo-600 dark:text-indigo-400" />
-          <h2 className="mt-6 text-3xl font-extrabold text-slate-900 dark:text-zinc-50">
-            Create an account
-          </h2>
-          <p className="mt-2 text-sm text-slate-500 dark:text-zinc-400">
-            Join StudyNook to book and list rooms
-          </p>
+    <>
+      <Toast toasts={toasts} removeToast={removeToast} />
+
+      {/* ── full-page background ── */}
+      <div className="min-h-screen w-full flex items-center justify-center
+        bg-linear-to-br from-slate-50 via-indigo-50/40 to-purple-50/30
+        dark:from-zinc-950 dark:via-indigo-950/20 dark:to-zinc-950
+        px-4 py-10 sm:py-16"
+      >
+        {/* decorative blobs */}
+        <div className="pointer-events-none select-none fixed inset-0 overflow-hidden hidden sm:block" aria-hidden>
+          <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full
+            bg-indigo-300/20 dark:bg-indigo-700/10 blur-3xl" />
+          <div className="absolute -bottom-20 -left-20 w-80 h-80 rounded-full
+            bg-purple-300/20 dark:bg-purple-700/10 blur-3xl" />
         </div>
 
-        <Form  onSubmit={onSubmit} className="flex w-96 mx-auto flex-col gap-4">
-          <TextField isRequired name="name">
-            <Label>Name</Label>
-            <Input placeholder="Enter your name" />
-            <FieldError />
-          </TextField>
-
-          <TextField
-            isRequired
-            name="email"
-            type="email"
-            validate={(value) => {
-              if (
-                !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(value)
-              ) {
-                return "Please enter a valid email address";
-              }
-              return null;
-            }}
-          >
-            <Label>Email</Label>
-            <Input placeholder="Email address" />
-            <FieldError />
-          </TextField>
-
-          <TextField isRequired name="image">
-            <Label>Image URL</Label>
-            <Input placeholder="Image URL" />
-            <FieldError />
-          </TextField>
-
-          <TextField
-            isRequired
-            name="password"
-            type="password"
-            validate={(value) => {
-              if (value.length < 8) {
-                return "Password must be at least 8 characters";
-              }
-              if (!/[A-Z]/.test(value)) {
-                return "Password must contain at least one uppercase letter";
-              }
-              if (!/[0-9]/.test(value)) {
-                return "Password must contain at least one number";
-              }
-              return null;
-            }}
-          >
-            <Label>Password</Label>
-            <Input placeholder="Password" />
-            <FieldError />
-          </TextField>
-
-          <Button className="w-full bg-indigo-600 text-white" type="submit">
-            Sign Up
-          </Button>
-
-         
-        </Form>
-
-         <Button
-            variant="outline"
-            className="w-full flex justify-center gap-2"
-          >
-           <FcGoogle></FcGoogle>
-            Continue with Google
-          </Button>
-
-          <div className="text-center mt-4">
-            <Link
-              href="/login"
-              className="text-sm text-indigo-600 hover:underline"
+        {/* ── card ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 32, scale: 0.97 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ type: "spring", stiffness: 260, damping: 22 }}
+          className="w-full max-w-md"
+        >
+          <Card className="
+            w-full rounded-3xl border border-slate-200/80 dark:border-zinc-800
+            bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl
+            shadow-2xl shadow-indigo-100/40 dark:shadow-indigo-950/40
+            px-6 py-10 sm:px-10
+          ">
+            <motion.div
+              variants={container}
+              initial="hidden"
+              animate="show"
+              className="flex flex-col gap-0"
             >
-              Already have an account? Login
-            </Link>
-          </div>
-      </Card>
-    </div>
+
+              {/* ── header ── */}
+              <motion.div variants={item} className="text-center mb-8">
+                <div className="inline-flex items-center justify-center
+                  w-14 h-14 rounded-2xl
+                  bg-indigo-600 dark:bg-indigo-500
+                  shadow-lg shadow-indigo-500/30 mb-4"
+                >
+                  <FiBookOpen className="w-7 h-7 text-white" />
+                </div>
+                <h2 className="text-2xl sm:text-3xl font-extrabold
+                  text-slate-900 dark:text-white tracking-tight">
+                  Create an account
+                </h2>
+                <p className="mt-1.5 text-sm text-slate-500 dark:text-zinc-400">
+                  Join StudyNook to book and list rooms
+                </p>
+              </motion.div>
+
+              {/* ── form ── */}
+              <Form className="flex flex-col gap-5 w-full" onSubmit={onSubmit}>
+
+                {/* Name */}
+                <motion.div variants={item} className="w-full">
+                  <TextField isRequired name="name" className="w-full">
+                    <Label className="text-sm font-semibold text-slate-700 dark:text-zinc-300 mb-1.5 block">
+                      Full Name
+                    </Label>
+                    <Input
+                      placeholder="Your full name"
+                      className="w-full rounded-xl border border-slate-200 dark:border-zinc-700
+                        bg-slate-50 dark:bg-zinc-800
+                        px-4 py-2.5 text-sm
+                        text-slate-800 dark:text-white
+                        placeholder:text-slate-400 dark:placeholder:text-zinc-500
+                        focus:outline-none focus:ring-2 focus:ring-indigo-500
+                        transition"
+                    />
+                    <FieldError className="text-xs text-red-500 mt-1" />
+                  </TextField>
+                </motion.div>
+
+                {/* Email */}
+                <motion.div variants={item} className="w-full">
+                  <TextField
+                    isRequired
+                    name="email"
+                    type="email"
+                    className="w-full"
+                    validate={(value) => {
+                      if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(value))
+                        return "Please enter a valid email address";
+                      return null;
+                    }}
+                  >
+                    <Label className="text-sm font-semibold text-slate-700 dark:text-zinc-300 mb-1.5 block">
+                      Email
+                    </Label>
+                    <Input
+                      placeholder="you@example.com"
+                      className="w-full rounded-xl border border-slate-200 dark:border-zinc-700
+                        bg-slate-50 dark:bg-zinc-800
+                        px-4 py-2.5 text-sm
+                        text-slate-800 dark:text-white
+                        placeholder:text-slate-400 dark:placeholder:text-zinc-500
+                        focus:outline-none focus:ring-2 focus:ring-indigo-500
+                        transition"
+                    />
+                    <FieldError className="text-xs text-red-500 mt-1" />
+                  </TextField>
+                </motion.div>
+
+                {/* Image URL */}
+                <motion.div variants={item} className="w-full">
+                  <TextField isRequired name="image" className="w-full">
+                    <Label className="text-sm font-semibold text-slate-700 dark:text-zinc-300 mb-1.5 block">
+                      Profile Image URL
+                    </Label>
+                    <Input
+                      placeholder="https://..."
+                      className="w-full rounded-xl border border-slate-200 dark:border-zinc-700
+                        bg-slate-50 dark:bg-zinc-800
+                        px-4 py-2.5 text-sm
+                        text-slate-800 dark:text-white
+                        placeholder:text-slate-400 dark:placeholder:text-zinc-500
+                        focus:outline-none focus:ring-2 focus:ring-indigo-500
+                        transition"
+                    />
+                    <FieldError className="text-xs text-red-500 mt-1" />
+                  </TextField>
+                </motion.div>
+
+                {/* Password */}
+                <motion.div variants={item} className="w-full">
+                  <TextField
+                    isRequired
+                    name="password"
+                    type="password"
+                    className="w-full"
+                    validate={(value) => {
+                      if (value.length < 8)
+                        return "Password must be at least 8 characters";
+                      if (!/[A-Z]/.test(value))
+                        return "Must contain at least one uppercase letter";
+                      if (!/[0-9]/.test(value))
+                        return "Must contain at least one number";
+                      return null;
+                    }}
+                  >
+                    <Label className="text-sm font-semibold text-slate-700 dark:text-zinc-300 mb-1.5 block">
+                      Password
+                    </Label>
+                    <Input
+                      placeholder="••••••••"
+                      className="w-full rounded-xl border border-slate-200 dark:border-zinc-700
+                        bg-slate-50 dark:bg-zinc-800
+                        px-4 py-2.5 text-sm
+                        text-slate-800 dark:text-white
+                        placeholder:text-slate-400 dark:placeholder:text-zinc-500
+                        focus:outline-none focus:ring-2 focus:ring-indigo-500
+                        transition"
+                    />
+                    <FieldError className="text-xs text-red-500 mt-1" />
+                  </TextField>
+                </motion.div>
+
+                {/* submit */}
+                <motion.div variants={item} className="w-full mt-1">
+                  <Button
+                    type="submit"
+                    isDisabled={loading}
+                    className="w-full rounded-xl py-2.5 text-sm font-semibold text-white
+                      bg-indigo-600 hover:bg-indigo-700
+                      dark:bg-indigo-500 dark:hover:bg-indigo-600
+                      shadow-md shadow-indigo-500/30
+                      disabled:opacity-60 disabled:cursor-not-allowed
+                      transition-all duration-150 active:scale-[0.98]"
+                  >
+                    {loading ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                        Creating account…
+                      </span>
+                    ) : "Sign Up"}
+                  </Button>
+                </motion.div>
+              </Form>
+
+              {/* divider */}
+              <motion.div variants={item} className="flex items-center gap-3 my-5">
+                <div className="flex-1 h-px bg-slate-200 dark:bg-zinc-700" />
+                <span className="text-xs text-slate-400 dark:text-zinc-500 font-medium">or</span>
+                <div className="flex-1 h-px bg-slate-200 dark:bg-zinc-700" />
+              </motion.div>
+
+              {/* google — original এ ছিল, logic রাখা হয়েছে */}
+              <motion.div variants={item}>
+                <Button
+                  variant="outline"
+                  className="w-full flex items-center justify-center gap-2.5
+                    rounded-xl py-2.5 px-4 text-sm font-medium
+                    border border-slate-200 dark:border-zinc-700
+                    text-slate-700 dark:text-zinc-300
+                    bg-white dark:bg-zinc-900
+                    hover:bg-slate-50 dark:hover:bg-zinc-800
+                    transition-all duration-150 active:scale-[0.98]"
+                >
+                  <FcGoogle size={18} />
+                  Continue with Google
+                </Button>
+              </motion.div>
+
+              {/* login link */}
+              <motion.div variants={item} className="text-center mt-6">
+                <Link
+                  href="/login"
+                  className="text-sm text-indigo-600 dark:text-indigo-400 font-medium hover:underline"
+                >
+                  Already have an account? Login
+                </Link>
+              </motion.div>
+
+            </motion.div>
+          </Card>
+        </motion.div>
+      </div>
+    </>
   );
 }

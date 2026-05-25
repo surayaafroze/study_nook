@@ -126,7 +126,8 @@ const AddRoomPage = () => {
   // UI
   // -----------------------
   return (
-    <div className="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow">
+    <div>
+      <div className="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow mt-15 mb-15">
       <h1 className="text-2xl font-bold mb-6">Add New Room</h1>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -222,6 +223,7 @@ const AddRoomPage = () => {
           {loading ? 'Submitting...' : 'Add Room'}
         </button>
       </form>
+    </div>
     </div>
   );
 };

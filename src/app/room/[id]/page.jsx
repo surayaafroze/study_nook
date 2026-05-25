@@ -1,6 +1,6 @@
 import BookinButton from '@/component/BookinButton';
+import EditRoomModal from '@/component/EditRoomModal';
 import { auth } from '@/lib/auth';
-import { h1 } from 'motion/react-client';
 import { headers } from 'next/headers';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -10,16 +10,27 @@ import { FiArrowLeft, FiUsers, FiMapPin, FiWifi } from 'react-icons/fi';
 const RoomDetailsPage = async ({ params }) => {
   const { id } = await params;
 
-  // Get session token server-side
+  // Get session token + user id server-side
   let token = null;
+  let currentUserId = null;
+
   try {
     const tokenData = await auth.api.getToken({ headers: await headers() });
     token = tokenData?.token || null;
+
+    // JWT payload এ sub = userId (Better Auth + jose convention)
+    if (token) {
+      const payload = JSON.parse(
+        Buffer.from(token.split('.')[1], 'base64url').toString()
+      );
+      currentUserId = payload?.sub || null;
+    }
   } catch {
     token = null;
+    currentUserId = null;
   }
 
-  // Fetch room details (protected route — needs token)
+  // Fetch room details
   let room = null;
   let error = null;
 
@@ -47,20 +58,19 @@ const RoomDetailsPage = async ({ params }) => {
   // Not logged in
   if (error === 'unauthorized') {
     return (
-      // <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-slate-50 dark:bg-zinc-950 px-4 text-center">
-      //   <div className="text-5xl mb-2">🔒</div>
-      //   <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Login Required</h2>
-      //   <p className="text-slate-500 dark:text-zinc-400 max-w-xs">
-      //     You need to be logged in to view room details.
-      //   </p>
-      //   <Link
-      //     href="/login"
-      //     className="mt-2 px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm transition"
-      //   >
-      //     Go to Login
-      //   </Link>
-      // </div>
-      <h1>suraya</h1>
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-slate-50 dark:bg-zinc-950 px-4 text-center">
+        <div className="text-5xl mb-2">🔒</div>
+        <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Login Required</h2>
+        <p className="text-slate-500 dark:text-zinc-400 max-w-xs">
+          You need to be logged in to view room details.
+        </p>
+        <Link
+          href="/login"
+          className="mt-2 px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm transition"
+        >
+          Go to Login
+        </Link>
+      </div>
     );
   }
 
@@ -81,6 +91,8 @@ const RoomDetailsPage = async ({ params }) => {
     );
   }
 
+  const isOwner = room.userId && currentUserId && room.userId === currentUserId;
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 py-10">
       <div className="max-w-6xl mx-auto px-4">
@@ -95,7 +107,7 @@ const RoomDetailsPage = async ({ params }) => {
         </Link>
 
         {/* HERO IMAGE */}
-        <div className="relative w-full h-[320px] md:h-[500px] rounded-3xl overflow-hidden shadow-2xl">
+        <div className="relative w-full h-80 md:h-125 rounded-3xl overflow-hidden shadow-2xl">
           <Image
             src={room.image || 'https://placehold.co/1200x500?text=Study+Room'}
             alt={room.roomName}
@@ -119,10 +131,19 @@ const RoomDetailsPage = async ({ params }) => {
                 <FiMapPin size={14} className="text-indigo-500" />
                 {room.floor || 'Floor not specified'}
               </p>
+
+              {/* Owner badge */}
+              {isOwner && (
+                <span className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full
+                  bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400
+                  border border-amber-200 dark:border-amber-800 text-xs font-semibold">
+                  👑 Your Listing
+                </span>
+              )}
             </div>
 
             {/* PRICE CARD */}
-            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-5 rounded-2xl shadow-lg text-center shrink-0">
+            <div className="bg-linear-to-r from-indigo-600 to-purple-600 text-white px-6 py-5 rounded-2xl shadow-lg text-center shrink-0">
               <p className="text-3xl font-bold">${room.hourlyRate}</p>
               <p className="text-sm opacity-80">per hour</p>
             </div>
@@ -169,7 +190,7 @@ const RoomDetailsPage = async ({ params }) => {
               <h2 className="text-2xl font-bold mb-4 text-slate-900 dark:text-white">
                 Amenities
               </h2>
-              {/* <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-3">
                 {room.amenities.map((item, i) => (
                   <span
                     key={i}
@@ -178,16 +199,32 @@ const RoomDetailsPage = async ({ params }) => {
                     {item}
                   </span>
                 ))}
-              </div> */}
+              </div>
             </div>
           )}
 
-          {/* BOOK BUTTON */}
-          <div className="mt-10">
+          {/* ACTION BUTTONS */}
+          <div className="mt-10 space-y-4">
+
+            {/* Book button — visible to everyone (owner + non-owner) */}
             <BookinButton room={room} token={token} />
-            <p className="text-center text-xs text-slate-400 mt-3">
+            <p className="text-center text-xs text-slate-400">
               Instant confirmation • Free cancellation available
             </p>
+
+            {/* Edit button — only visible to the owner of this room */}
+            {isOwner && (
+              <div className="pt-2 border-t border-slate-100 dark:border-zinc-800">
+                <p className="text-center text-xs text-slate-400 mb-3">
+                  👑 You own this listing — you can edit it anytime
+                </p>
+                <EditRoomModal
+                  room={room}
+                  currentUserId={currentUserId}
+                />
+              </div>
+            )}
+
           </div>
 
         </div>

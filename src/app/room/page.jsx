@@ -47,6 +47,7 @@ const RoomPage = () => {
   }, [search, selectedAmenities, minRate, maxRate]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchRooms();
   }, [fetchRooms]);
 
@@ -79,7 +80,7 @@ const RoomPage = () => {
 
           {/* Search + Filter bar */}
           <div className="mt-5 flex gap-3 flex-wrap">
-            <div className="relative flex-1 min-w-[200px] max-w-lg">
+            <div className="relative flex-1 min-w-50 max-w-lg">
               <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
               <input
                 type="text"

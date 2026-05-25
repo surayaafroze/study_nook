@@ -30,7 +30,7 @@ const Banner = async () => {
             <div className="max-w-3xl mx-auto text-center space-y-8">
               <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-zinc-50">
                 Find Your Perfect <br className="hidden md:block" />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-600 dark:from-indigo-400 dark:to-blue-400">
+                <span className="text-transparent bg-clip-text bg-linear-to-r from-indigo-600 to-blue-600 dark:from-indigo-400 dark:to-blue-400">
                   Study Room
                 </span>
               </h1>
@@ -179,13 +179,13 @@ const Banner = async () => {
             </div>
 
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-tr from-indigo-600 to-blue-500 rounded-2xl transform rotate-3 scale-105 opacity-20 blur-xl" />
+              <div className="absolute inset-0 bg-linear-to-tr from-indigo-600 to-blue-500 rounded-2xl transform rotate-3 scale-105 opacity-20 blur-xl" />
               <Image
                 src="/banner.avif"
                 alt="Modern study space"
                 width={700}
                 height={500}
-                className="relative rounded-2xl shadow-2xl object-cover h-[500px] w-full"
+                className="relative rounded-2xl shadow-2xl object-cover h-125 w-full"
               />
             </div>
           </div>
