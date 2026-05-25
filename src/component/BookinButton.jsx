@@ -1,11 +1,14 @@
 'use client';
 
 import { authClient } from '@/lib/auth-client';
+
+import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 
 const BookinButton = ({ room, token }) => {
   const { data: session } = authClient.useSession();
   const user = session?.user;
+   const router = useRouter();
 
   const [date, setDate] = useState('');
   const [startTime, setStartTime] = useState('');
@@ -85,6 +88,8 @@ const BookinButton = ({ room, token }) => {
 
       alert("🎉 Booking successful!");
       setBookingCount(prev => prev + 1);
+   router.push('/mybookings');
+
 
     } catch (err) {
       console.error("Booking error:", err);

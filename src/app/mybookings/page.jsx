@@ -137,9 +137,13 @@ const handleCancel = async () => {
       throw new Error(err.message || "Cancel failed");
     }
 
-    // ✅ এই লাইনটা পরিবর্তন করুন
-    setBookings((prev) => prev.filter((b) => b._id !== cancelTarget._id));
-    
+    // ✅ remove না করে status update করুন
+    setBookings((prev) =>
+      prev.map((b) =>
+        b._id === cancelTarget._id ? { ...b, status: "cancelled" } : b
+      )
+    );
+
     toast.success("Booking cancelled");
   } catch (err) {
     toast.error(err.message || "Something went wrong");
@@ -248,7 +252,7 @@ const handleCancel = async () => {
 
                     {b.specialNote && (
                       <p className="text-xs text-slate-400 italic border-l-2 border-indigo-300 pl-2">
-                        "{b.specialNote}"
+                        &quot;{b.specialNote}&quot;
                       </p>
                     )}
 
