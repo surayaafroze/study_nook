@@ -13,7 +13,7 @@ export async function proxy(request) {
 });
 const userr = session?.user
 console.log(userr,"user login")
- if (!session?.user) {
+ if (!userr) {
   console.log(userr,"user login")
   return NextResponse.redirect(new URL('/login', request.url));
 }

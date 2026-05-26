@@ -106,6 +106,21 @@ export default function SignUpPage() {
     }
   };
 
+
+  const handelGoogleSignIn = async () => {
+    
+   try {
+        // setGoogleLoading(true);
+       const data = await authClient.signIn.social({
+      provider: "google",
+      callbackURL:'/',
+    });
+      } catch {
+        // addToast("Google sign-in failed. Try again.", "error");
+        // setGoogleLoading(false);
+      }
+  };
+
   /* ── stagger variants ── */
   const container = {
     hidden: {},
@@ -311,6 +326,7 @@ export default function SignUpPage() {
               {/* google — original এ ছিল, logic রাখা হয়েছে */}
               <motion.div variants={item}>
                 <Button
+                onClick={handelGoogleSignIn }
                   variant="outline"
                   className="w-full flex items-center justify-center gap-2.5
                     rounded-xl py-2.5 px-4 text-sm font-medium

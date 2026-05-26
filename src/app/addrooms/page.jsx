@@ -130,7 +130,7 @@ const AddRoomPage = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          authorization: `Bearer ${tokenData.token}`,
+          authorization: `Bearer ${tokenData?.token}`,
         },
         body: JSON.stringify({
           roomName: form.roomName.trim(),

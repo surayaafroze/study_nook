@@ -6,31 +6,84 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { FiArrowLeft, FiUsers, FiMapPin, FiWifi } from 'react-icons/fi';
 
+// export async function generateMetadata({ params }) {
+//   const { id } =await params;
+// console.log(id)
+//   try {
+//     const res = await fetch(
+//       `${process.env.NEXT_PUBLIC_API_URL}/room/${id}`,
+//       { cache: "no-store" }
+//     );
+
+//     if (!res.ok) {
+//       return {
+//         title: "Room Not Found",
+//         description: "This room does not exist",
+//       };
+//     }
+
+//     const room = await res.json();
+
+//     return {
+//       title: `${room.roomName} | studyNook`,
+//       description: room.description || "Study room details",
+//       openGraph: {
+//         title: room.roomName,
+//         description: room.description,
+//         images: [
+//           {
+//             url: room.image,
+//           },
+//         ],
+//       },
+//     };
+//   } catch (err) {
+//     return {
+//       title: "Error loading room",
+//       description: "Something went wrong",
+//     };
+//   }
+// }
+
 // This file goes in: app/room/[id]/page.jsx
 const RoomDetailsPage = async ({ params }) => {
   const { id } = await params;
 
+
+const { token } = await auth.api.getToken({
+    headers: await headers(), 
+  });
+
+const session = await auth.api.getSession({
+    headers: await headers() // you need to pass the headers object.
+})
+console.log(session)
+
+const currentUserId = session?.user?.id;
   // Get session token + user id server-side
-  let token = null;
-  let currentUserId = null;
+  // let token = null;
+  // let currentUserId = null;
 
-  try {
-    const tokenData = await auth.api.getToken({ headers: await headers() });
-    token = tokenData?.token || null;
+  // try {
+  //   const tokenData = await auth.api.getToken({ headers: await headers() });
+  //   token = tokenData?.token || null;
 
-    // JWT payload এ sub = userId (Better Auth + jose convention)
-    if (token) {
-      const payload = JSON.parse(
-        Buffer.from(token.split('.')[1], 'base64url').toString()
-      );
-      currentUserId = payload?.sub || null;
-    }
-  } catch {
-    token = null;
-    currentUserId = null;
-  }
+  //   // JWT payload এ sub = userId (Better Auth + jose convention)
+  //   if (token) {
+  //     const payload = JSON.parse(
+  //       Buffer.from(token.split('.')[1], 'base64url').toString()
+  //     );
+  //     currentUserId = payload?.sub || null;
+  //   }
+  // } catch {
+  //   token = null;
+  //   currentUserId = null;
+  // }
 
   // Fetch room details
+  
+  
+  
   let room = null;
   let error = null;
 
@@ -46,6 +99,7 @@ const RoomDetailsPage = async ({ params }) => {
       error = 'unauthorized';
     } else if (res.status === 404) {
       error = 'notfound';
+     
     } else if (!res.ok) {
       error = 'error';
     } else {
@@ -54,7 +108,7 @@ const RoomDetailsPage = async ({ params }) => {
   } catch {
     error = 'error';
   }
-
+  console.log(room)
   // Not logged in
   if (error === 'unauthorized') {
     return (
@@ -92,6 +146,15 @@ const RoomDetailsPage = async ({ params }) => {
   }
 
   const isOwner = room.userId && currentUserId && room.userId === currentUserId;
+
+  // const isOwner =
+  // room?.userId?.toString() === currentUserId?.toString();
+// console.log("room userId:", room.userId);
+// console.log("session user:", session?.user);
+// console.log("currentUserId:", currentUserId);
+// console.log("isOwner:", isOwner);
+
+
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 py-10">

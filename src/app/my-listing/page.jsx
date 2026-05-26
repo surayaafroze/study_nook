@@ -134,6 +134,7 @@ export default function MyListingsPage() {
               {/* IMAGE */}
               <div className="h-40 bg-gray-200 dark:bg-zinc-800">
                 {room.image && (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={room.image}
                     alt={room.roomName}
@@ -176,13 +177,13 @@ export default function MyListingsPage() {
                 {/* ACTIONS */}
                 <div className="flex gap-2 mt-5">
 
-                  <button
+                  {/* <button
                     onClick={() => alert('Edit coming soon')}
                     className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"
                   >
                     <FiEdit2 size={14} />
                     Edit
-                  </button>
+                  </button> */}
 
                   <button
                     onClick={() => handleDelete(room._id)}

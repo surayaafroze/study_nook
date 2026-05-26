@@ -5,11 +5,12 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { FiBookOpen, FiChevronDown, FiLogOut, FiPlusSquare, FiList, FiCalendar } from 'react-icons/fi';
 import { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 const Navbar = () => {
   const { data: session } = authClient.useSession();
   const user = session?.user;
-
+const router = useRouter()
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -18,6 +19,7 @@ const Navbar = () => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setOpen(false);
+
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -27,6 +29,7 @@ const Navbar = () => {
   const handleSignOut = async () => {
     await authClient.signOut();
     setOpen(false);
+router.push('/register')
   };
 
   return (
@@ -190,7 +193,8 @@ const Navbar = () => {
                       className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                     >
                       <FiLogOut size={15} />
-                      Logout
+                      
+                      SignUp
                     </button>
                   </div>
 

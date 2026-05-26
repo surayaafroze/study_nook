@@ -2,9 +2,15 @@ import Link from "next/link";
 import { FiBookOpen, FiFacebook, FiLinkedin, FiInstagram, FiMail, FiPhone, FiMapPin } from "react-icons/fi";
 
 export default function Footer() {
+  const socialLinks = [
+    { icon: FiFacebook, href: "https://facebook.com", label: "Facebook" },
+    { icon: FiLinkedin, href: "https://linkedin.com", label: "LinkedIn" },
+    { icon: FiInstagram, href: "https://instagram.com", label: "Instagram" },
+  ];
+
   return (
     <footer className="bg-slate-50 dark:bg-zinc-900 pt-16 pb-8 border-t border-slate-200 dark:border-zinc-800">
-      <div className="container mx-auto px-4 max-w-7xl ">
+      <div className="container mx-auto px-4 max-w-7xl">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
           {/* Brand */}
           <div className="space-y-4">
@@ -23,9 +29,21 @@ export default function Footer() {
           <div>
             <h3 className="font-semibold text-lg mb-4">Quick Links</h3>
             <ul className="space-y-2">
-              <li><Link href="/" className="text-slate-500 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors text-sm">Home</Link></li>
-              <li><Link href="/rooms" className="text-slate-500 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors text-sm">All Rooms</Link></li>
-              <li><Link href="/about" className="text-slate-500 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors text-sm">About Us</Link></li>
+              <li>
+                <Link href="/" className="text-slate-500 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors text-sm">
+                  Home
+                </Link>
+              </li>
+              <li>
+                <Link href="/room" className="text-slate-500 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors text-sm">
+                  All Rooms
+                </Link>
+              </li>
+              <li>
+                <Link href="/about-us" className="text-slate-500 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors text-sm">
+                  About Us
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -51,10 +69,23 @@ export default function Footer() {
           {/* Social */}
           <div>
             <h3 className="font-semibold text-lg mb-4">Follow Us</h3>
-            
+            <div className="flex items-center gap-3">
+              {socialLinks.map(({ icon: Icon, href, label }) => (
+                <Link
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={label}
+                  className="p-2 rounded-lg bg-slate-100 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                >
+                  <Icon className="h-5 w-5" />
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
-        
+
         <div className="pt-8 border-t border-slate-200 dark:border-zinc-800 text-center text-slate-500 dark:text-zinc-400 text-sm">
           <p>&copy; {new Date().getFullYear()} StudyNook. All rights reserved.</p>
         </div>

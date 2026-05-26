@@ -12,7 +12,7 @@ export function BookinCancel({ bookingsId, onDeleted }) {
 
     try {
       const res = await fetch(
-        `http://localhost:5000/bookings/${bookingsId}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/bookings/${bookingsId}`,
         {
           method: "DELETE",
         }

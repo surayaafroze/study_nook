@@ -107,16 +107,24 @@ export default function SignInPage() {
     }
   };
 
+
+
   /* ── google ── */
-  const handelGoogleSignIn = async () => {
-    try {
+  
+
+const handelGoogleSignIn = async () => {
+  
+ try {
       setGoogleLoading(true);
-      await authClient.signIn.social({ provider: "google" });
+     const data = await authClient.signIn.social({
+    provider: "google",
+  });
     } catch {
-      addToast("Google sign-in failed. Try again.", "error");
+      // addToast("Google sign-in failed. Try again.", "error");
       setGoogleLoading(false);
     }
-  };
+};
+
 
   /* ── stagger animation variants ── */
   const container = {

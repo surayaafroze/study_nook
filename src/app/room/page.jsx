@@ -66,7 +66,7 @@ const RoomPage = () => {
 
   const hasFilters = search || selectedAmenities.length > 0 || minRate || maxRate;
   const activeFilterCount = selectedAmenities.length + (minRate ? 1 : 0) + (maxRate ? 1 : 0);
-
+console.log('rooms',rooms)
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-zinc-950">
 
