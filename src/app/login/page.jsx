@@ -17,11 +17,14 @@ import { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { FiBookOpen, FiCheckCircle, FiXCircle, FiX } from "react-icons/fi";
 
+
+
+
 /* ═══════════════════════════════════════════
    TOAST COMPONENT
 ═══════════════════════════════════════════ */
 const Toast = ({ toasts, removeToast }) => (
-  <div className="fixed top-5 right-5 z-9999 flex flex-col gap-3 pointer-events-none">
+  <div className="fixed top-5 right-5 z-[9999] flex flex-col gap-3 pointer-events-none">
     <AnimatePresence>
       {toasts.map((t) => (
         <motion.div
@@ -31,16 +34,18 @@ const Toast = ({ toasts, removeToast }) => (
           exit={{ opacity: 0, x: 80, scale: 0.85 }}
           transition={{ type: "spring", stiffness: 380, damping: 28 }}
           className={`pointer-events-auto flex items-start gap-3 px-4 py-3.5
-            rounded-2xl shadow-2xl border backdrop-blur-sm min-w-65 max-w-85
-            ${t.type === "success"
-              ? "bg-emerald-50/95 dark:bg-emerald-950/90 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200"
-              : "bg-red-50/95 dark:bg-red-950/90 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200"
+            rounded-2xl shadow-2xl border backdrop-blur-sm min-w-[260px] max-w-[340px]
+            ${
+              t.type === "success"
+                ? "bg-emerald-50/95 dark:bg-emerald-950/90 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200"
+                : "bg-red-50/95 dark:bg-red-950/90 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200"
             }`}
         >
-          {t.type === "success"
-            ? <FiCheckCircle size={18} className="mt-0.5 shrink-0 text-emerald-500" />
-            : <FiXCircle size={18} className="mt-0.5 shrink-0 text-red-500" />
-          }
+          {t.type === "success" ? (
+            <FiCheckCircle size={18} className="mt-0.5 shrink-0 text-emerald-500" />
+          ) : (
+            <FiXCircle size={18} className="mt-0.5 shrink-0 text-red-500" />
+          )}
           <div className="flex-1 text-sm font-medium leading-snug">{t.msg}</div>
           <button
             onClick={() => removeToast(t.id)}
@@ -64,19 +69,18 @@ export default function SignInPage() {
   const [toasts, setToasts] = useState([]);
 
   /* ── toast helpers ── */
+  const removeToast = (id) =>
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+
   const addToast = (msg, type = "success") => {
-    // eslint-disable-next-line react-hooks/purity
     const id = Date.now();
-    setToasts((p) => [...p, { id, msg, type }]);
+    setToasts((prev) => [...prev, { id, msg, type }]);
     setTimeout(() => removeToast(id), 4000);
   };
-  const removeToast = (id) =>
-    setToasts((p) => p.filter((t) => t.id !== id));
 
-  /* ── sign in ── */
+  /* ── email sign in ── */
   const onSubmit = async (e) => {
     e.preventDefault();
-    console.log("SUBMIT FIRED");
 
     const email = e.target.email.value;
     const password = e.target.password.value;
@@ -84,56 +88,44 @@ export default function SignInPage() {
     try {
       setLoading(true);
 
-      // callbackURL বাদ দেওয়া হয়েছে — toast দেখানোর পর manually redirect
-      const { data, error } = await authClient.signIn.email({
-        email,
-        password,
-      });
-
-      const { data: tokenData } = await authClient.token();
-      console.log(tokenData);
+      const { error } = await authClient.signIn.email({ email, password });
 
       if (error) {
         addToast(error?.message || "Sign in failed. Please try again.", "error");
       } else {
         addToast("Welcome back! Signing you in…", "success");
-        // toast দেখানোর 1.2s পরে redirect
         setTimeout(() => router.push("/"), 1200);
       }
-    } catch (err) {
+    } catch {
       addToast("Something went wrong. Please try again.", "error");
     } finally {
       setLoading(false);
     }
   };
 
-
-
-  /* ── google ── */
-  
-
-const handelGoogleSignIn = async () => {
-  
- try {
+  /* ── google sign in ── */
+  const handleGoogleSignIn = async () => {
+    try {
       setGoogleLoading(true);
-     const data = await authClient.signIn.social({
-    provider: "google",
-  });
+      await authClient.signIn.social({ provider: "google" });
     } catch {
-      // addToast("Google sign-in failed. Try again.", "error");
+      addToast("Google sign-in failed. Try again.", "error");
       setGoogleLoading(false);
     }
-};
+  };
 
-
-  /* ── stagger animation variants ── */
+  /* ── animation variants ── */
   const container = {
     hidden: {},
     show: { transition: { staggerChildren: 0.08 } },
   };
   const item = {
     hidden: { opacity: 0, y: 18 },
-    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 320, damping: 26 } },
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: { type: "spring", stiffness: 320, damping: 26 },
+    },
   };
 
   return (
@@ -141,17 +133,19 @@ const handelGoogleSignIn = async () => {
       <Toast toasts={toasts} removeToast={removeToast} />
 
       {/* ── full-page background ── */}
-      <div className="min-h-screen w-full flex items-center justify-center
-        bg-linear-to-br from-slate-50 via-indigo-50/40 to-purple-50/30
+      <div
+        className="min-h-screen w-full flex items-center justify-center
+        bg-gradient-to-br from-slate-50 via-indigo-50/40 to-purple-50/30
         dark:from-zinc-950 dark:via-indigo-950/20 dark:to-zinc-950
         px-4 py-10 sm:py-16"
       >
         {/* decorative blobs */}
-        <div className="pointer-events-none select-none fixed inset-0 overflow-hidden hidden sm:block" aria-hidden>
-          <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full
-            bg-indigo-300/20 dark:bg-indigo-700/10 blur-3xl" />
-          <div className="absolute -bottom-20 -right-20 w-80 h-80 rounded-full
-            bg-purple-300/20 dark:bg-purple-700/10 blur-3xl" />
+        <div
+          className="pointer-events-none select-none fixed inset-0 overflow-hidden hidden sm:block"
+          aria-hidden
+        >
+          <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-indigo-300/20 dark:bg-indigo-700/10 blur-3xl" />
+          <div className="absolute -bottom-20 -right-20 w-80 h-80 rounded-full bg-purple-300/20 dark:bg-purple-700/10 blur-3xl" />
         </div>
 
         {/* ── card ── */}
@@ -161,30 +155,31 @@ const handelGoogleSignIn = async () => {
           transition={{ type: "spring", stiffness: 260, damping: 22 }}
           className="w-full max-w-md"
         >
-          <Card className="
+          <Card
+            className="
             w-full rounded-3xl border border-slate-200/80 dark:border-zinc-800
             bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl
             shadow-2xl shadow-indigo-100/40 dark:shadow-indigo-950/40
             px-6 py-10 sm:px-10
-          ">
+          "
+          >
             <motion.div
               variants={container}
               initial="hidden"
               animate="show"
               className="flex flex-col gap-0"
             >
-
               {/* ── header ── */}
               <motion.div variants={item} className="text-center mb-8">
-                <div className="inline-flex items-center justify-center
+                <div
+                  className="inline-flex items-center justify-center
                   w-14 h-14 rounded-2xl
                   bg-indigo-600 dark:bg-indigo-500
                   shadow-lg shadow-indigo-500/30 mb-4"
                 >
                   <FiBookOpen className="w-7 h-7 text-white" />
                 </div>
-                <h2 className="text-2xl sm:text-3xl font-extrabold
-                  text-slate-900 dark:text-white tracking-tight">
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
                   Welcome back
                 </h2>
                 <p className="mt-1.5 text-sm text-slate-500 dark:text-zinc-400">
@@ -194,7 +189,7 @@ const handelGoogleSignIn = async () => {
 
               {/* ── form ── */}
               <Form className="flex flex-col gap-5 w-full" onSubmit={onSubmit}>
-
+                {/* email */}
                 <motion.div variants={item} className="w-full">
                   <TextField
                     isRequired
@@ -224,6 +219,7 @@ const handelGoogleSignIn = async () => {
                   </TextField>
                 </motion.div>
 
+                {/* password */}
                 <motion.div variants={item} className="w-full">
                   <TextField
                     isRequired
@@ -275,7 +271,9 @@ const handelGoogleSignIn = async () => {
                         <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
                         Signing in…
                       </span>
-                    ) : "Sign In"}
+                    ) : (
+                      "Sign In"
+                    )}
                   </Button>
                 </motion.div>
               </Form>
@@ -283,14 +281,16 @@ const handelGoogleSignIn = async () => {
               {/* divider */}
               <motion.div variants={item} className="flex items-center gap-3 my-5">
                 <div className="flex-1 h-px bg-slate-200 dark:bg-zinc-700" />
-                <span className="text-xs text-slate-400 dark:text-zinc-500 font-medium">or</span>
+                <span className="text-xs text-slate-400 dark:text-zinc-500 font-medium">
+                  or
+                </span>
                 <div className="flex-1 h-px bg-slate-200 dark:bg-zinc-700" />
               </motion.div>
 
               {/* google */}
               <motion.div variants={item}>
                 <Button
-                  onClick={handelGoogleSignIn}
+                  onClick={handleGoogleSignIn}
                   isDisabled={googleLoading}
                   variant="outline"
                   className="w-full flex items-center justify-center gap-2.5
@@ -302,10 +302,11 @@ const handelGoogleSignIn = async () => {
                     disabled:opacity-60 disabled:cursor-not-allowed
                     transition-all duration-150 active:scale-[0.98]"
                 >
-                  {googleLoading
-                    ? <span className="w-4 h-4 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
-                    : <FcGoogle size={18} />
-                  }
+                  {googleLoading ? (
+                    <span className="w-4 h-4 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
+                  ) : (
+                    <FcGoogle size={18} />
+                  )}
                   Continue with Google
                 </Button>
               </motion.div>
@@ -319,7 +320,6 @@ const handelGoogleSignIn = async () => {
                   Don&apos;t have an account? Register
                 </Link>
               </motion.div>
-
             </motion.div>
           </Card>
         </motion.div>

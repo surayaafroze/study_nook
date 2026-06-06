@@ -1,6 +1,9 @@
 import { FiBookOpen, FiUsers, FiAward, FiStar, FiCheckCircle, FiMapPin, FiZap, FiShield } from "react-icons/fi";
 import Link from "next/link";
 
+
+
+
 const stats = [
   { value: "12K+", label: "Active Students" },
   { value: "98%", label: "Satisfaction Rate" },

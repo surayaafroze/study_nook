@@ -1,3 +1,5 @@
+
+
 import BookinButton from '@/component/BookinButton';
 import EditRoomModal from '@/component/EditRoomModal';
 import { auth } from '@/lib/auth';
@@ -6,100 +8,90 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { FiArrowLeft, FiUsers, FiMapPin, FiWifi } from 'react-icons/fi';
 
-// export async function generateMetadata({ params }) {
-//   const { id } =await params;
-// console.log(id)
-//   try {
-//     const res = await fetch(
-//       `${process.env.NEXT_PUBLIC_API_URL}/room/${id}`,
-//       { cache: "no-store" }
-//     );
+// ─── Helper: token আনো, error হলে null দাও ──────────────────────────────────
+async function getAuthToken() {
+  try {
+    const { token } = await auth.api.getToken({ headers: await headers() });
+    return token ?? null;
+  } catch {
+    return null;
+  }
+}
 
-//     if (!res.ok) {
-//       return {
-//         title: "Room Not Found",
-//         description: "This room does not exist",
-//       };
-//     }
+// ─── Helper: room fetch করো (token optional) ─────────────────────────────────
+async function fetchRoom(id, token) {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/room/${id}`, {
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    cache: 'no-store',
+  });
+  return res; // caller নিজে status handle করবে
+}
 
-//     const room = await res.json();
 
-//     return {
-//       title: `${room.roomName} | studyNook`,
-//       description: room.description || "Study room details",
-//       openGraph: {
-//         title: room.roomName,
-//         description: room.description,
-//         images: [
-//           {
-//             url: room.image,
-//           },
-//         ],
-//       },
-//     };
-//   } catch (err) {
-//     return {
-//       title: "Error loading room",
-//       description: "Something went wrong",
-//     };
-//   }
-// }
 
-// This file goes in: app/room/[id]/page.jsx
+// ─── Metadata ────────────────────────────────────────────────────────────────
+export async function generateMetadata({ params }) {
+  const { id } = await params;
+
+  try {
+    // token দিয়ে চেষ্টা করো; না পেলেও fetch যাবে (public room হলে কাজ করবে)
+    const token = await getAuthToken();
+    const res = await fetchRoom(id, token);
+
+    if (!res.ok) {
+      return {
+        title: 'Room Not Found | studyNook',
+        description: 'This room does not exist or has been removed.',
+      };
+    }
+
+    const room = await res.json();
+
+    return {
+      title: `${room.roomName} | studyNook`,
+      description: room.description || 'Study room details',
+      openGraph: {
+        title: room.roomName,
+        description: room.description,
+        images: room.image ? [{ url: room.image }] : [],
+      },
+    };
+  } catch {
+    // network error বা parse error — silent fallback
+    return {
+      title: 'studyNook | Room Details',
+      description: 'Browse and book study rooms.',
+    };
+  }
+}
+
+// ─── Page ────────────────────────────────────────────────────────────────────
 const RoomDetailsPage = async ({ params }) => {
   const { id } = await params;
 
+  // Token + session একসাথে আনো
+  const [token, session] = await Promise.allSettled([
+    getAuthToken(),
+    auth.api.getSession({ headers: await headers() }).catch(() => null),
+  ]);
 
-const { token } = await auth.api.getToken({
-    headers: await headers(), 
-  });
+  const resolvedToken = token.status === 'fulfilled' ? token.value : null;
+  const resolvedSession = session.status === 'fulfilled' ? session.value : null;
+  const currentUserId = resolvedSession?.user?.id ?? null;
 
-const session = await auth.api.getSession({
-    headers: await headers() // you need to pass the headers object.
-})
-console.log(session)
-
-const currentUserId = session?.user?.id;
-  // Get session token + user id server-side
-  // let token = null;
-  // let currentUserId = null;
-
-  // try {
-  //   const tokenData = await auth.api.getToken({ headers: await headers() });
-  //   token = tokenData?.token || null;
-
-  //   // JWT payload এ sub = userId (Better Auth + jose convention)
-  //   if (token) {
-  //     const payload = JSON.parse(
-  //       Buffer.from(token.split('.')[1], 'base64url').toString()
-  //     );
-  //     currentUserId = payload?.sub || null;
-  //   }
-  // } catch {
-  //   token = null;
-  //   currentUserId = null;
-  // }
-
-  // Fetch room details
-  
-  
-  
+  // Room fetch
   let room = null;
   let error = null;
 
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/room/${id}`, {
-      headers: {
-        Authorization: token ? `Bearer ${token}` : '',
-      },
-      cache: 'no-store',
-    });
+    const res = await fetchRoom(id, resolvedToken);
 
     if (res.status === 401) {
       error = 'unauthorized';
     } else if (res.status === 404) {
       error = 'notfound';
-     
     } else if (!res.ok) {
       error = 'error';
     } else {
@@ -108,8 +100,8 @@ const currentUserId = session?.user?.id;
   } catch {
     error = 'error';
   }
-  console.log(room)
-  // Not logged in
+
+  // ── Error states ────────────────────────────────────────────────────────────
   if (error === 'unauthorized') {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-slate-50 dark:bg-zinc-950 px-4 text-center">
@@ -128,7 +120,6 @@ const currentUserId = session?.user?.id;
     );
   }
 
-  // Room not found
   if (error === 'notfound' || !room) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-slate-50 dark:bg-zinc-950 px-4 text-center">
@@ -145,17 +136,28 @@ const currentUserId = session?.user?.id;
     );
   }
 
-  const isOwner = room.userId && currentUserId && room.userId === currentUserId;
+  if (error === 'error') {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-slate-50 dark:bg-zinc-950 px-4 text-center">
+        <div className="text-5xl mb-2">⚠️</div>
+        <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Something went wrong</h2>
+        <p className="text-slate-500 dark:text-zinc-400">Please try again later.</p>
+        <Link
+          href="/room"
+          className="mt-2 px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm transition"
+        >
+          Browse All Rooms
+        </Link>
+      </div>
+    );
+  }
 
-  // const isOwner =
-  // room?.userId?.toString() === currentUserId?.toString();
-// console.log("room userId:", room.userId);
-// console.log("session user:", session?.user);
-// console.log("currentUserId:", currentUserId);
-// console.log("isOwner:", isOwner);
+  const isOwner =
+    Boolean(room.userId) &&
+    Boolean(currentUserId) &&
+    String(room.userId) === String(currentUserId);
 
-
-
+  // ── Main UI ─────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 py-10">
       <div className="max-w-6xl mx-auto px-4">
@@ -268,26 +270,19 @@ const currentUserId = session?.user?.id;
 
           {/* ACTION BUTTONS */}
           <div className="mt-10 space-y-4">
-
-            {/* Book button — visible to everyone (owner + non-owner) */}
-            <BookinButton room={room} token={token} />
+            <BookinButton room={room} token={resolvedToken} />
             <p className="text-center text-xs text-slate-400">
               Instant confirmation • Free cancellation available
             </p>
 
-            {/* Edit button — only visible to the owner of this room */}
             {isOwner && (
               <div className="pt-2 border-t border-slate-100 dark:border-zinc-800">
                 <p className="text-center text-xs text-slate-400 mb-3">
                   👑 You own this listing — you can edit it anytime
                 </p>
-                <EditRoomModal
-                  room={room}
-                  currentUserId={currentUserId}
-                />
+                <EditRoomModal room={room} currentUserId={currentUserId} />
               </div>
             )}
-
           </div>
 
         </div>
