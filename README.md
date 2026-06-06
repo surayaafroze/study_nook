@@ -114,7 +114,7 @@ StudyNook is a modern study room booking platform where students and library use
 ### Clone Repository
 
 ```bash
-git clone YOUR_CLIENT_REPOSITORY_LINK
+git clone https://github.com/surayaafroze/study_nook
 ```
 
 ### Install Dependencies
@@ -126,7 +126,7 @@ npm install
 ### Create Environment File
 
 ```env
-NEXT_PUBLIC_API_URL=YOUR_SERVER_URL
+NEXT_PUBLIC_API_URL=http://localhost:5000
 ```
 
 ### Run Development Server
