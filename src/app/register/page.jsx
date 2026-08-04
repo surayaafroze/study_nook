@@ -24,7 +24,7 @@ import { FiBookOpen, FiCheckCircle, FiXCircle, FiX } from "react-icons/fi";
    TOAST COMPONENT
 ═══════════════════════════════════════════ */
 const Toast = ({ toasts, removeToast }) => (
-  <div className="fixed top-5 right-5 z-9999 flex flex-col gap-3 pointer-events-none">
+  <div className="fixed top-5 right-5 z-[9999] flex flex-col gap-3 pointer-events-none">
     <AnimatePresence>
       {toasts.map((t) => (
         <motion.div
@@ -34,7 +34,7 @@ const Toast = ({ toasts, removeToast }) => (
           exit={{ opacity: 0, x: 80, scale: 0.85 }}
           transition={{ type: "spring", stiffness: 380, damping: 28 }}
           className={`pointer-events-auto flex items-start gap-3 px-4 py-3.5
-            rounded-2xl shadow-2xl border backdrop-blur-sm min-w-65 max-w-85
+            rounded-2xl shadow-2xl border backdrop-blur-sm min-w-[260px] max-w-[340px]
             ${t.type === "success"
               ? "bg-emerald-50/95 dark:bg-emerald-950/90 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200"
               : "bg-red-50/95 dark:bg-red-950/90 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200"
