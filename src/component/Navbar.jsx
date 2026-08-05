@@ -3,15 +3,16 @@
 import { authClient } from '@/lib/auth-client';
 import Link from 'next/link';
 import Image from 'next/image';
-import { FiBookOpen, FiChevronDown, FiLogOut, FiPlusSquare, FiList, FiCalendar } from 'react-icons/fi';
+import { FiBookOpen, FiChevronDown, FiLogOut, FiPlusSquare, FiList, FiCalendar, FiMenu, FiX } from 'react-icons/fi';
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 const Navbar = () => {
   const { data: session } = authClient.useSession();
   const user = session?.user;
-const router = useRouter()
+  const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const dropdownRef = useRef(null);
 
   // Close dropdown when clicking outside
@@ -19,7 +20,6 @@ const router = useRouter()
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setOpen(false);
-
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -29,7 +29,8 @@ const router = useRouter()
   const handleSignOut = async () => {
     await authClient.signOut();
     setOpen(false);
-router.push('/register')
+    setMobileOpen(false);
+    router.push('/register');
   };
 
   return (
@@ -45,7 +46,7 @@ router.push('/register')
           StudyNook
         </Link>
 
-        {/* Nav Links */}
+        {/* Nav Links (Desktop) */}
         <ul className="hidden md:flex items-center gap-6 text-sm font-medium">
           <li>
             <Link
@@ -94,7 +95,7 @@ router.push('/register')
           )}
         </ul>
 
-        {/* Auth Section */}
+        {/* Auth Section & Mobile Toggle */}
         <div className="flex items-center gap-3">
 
           {!user ? (
@@ -193,8 +194,7 @@ router.push('/register')
                       className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                     >
                       <FiLogOut size={15} />
-                      
-                      SignUp
+                      Sign Out
                     </button>
                   </div>
 
@@ -202,8 +202,63 @@ router.push('/register')
               )}
             </div>
           )}
+
+          {/* Mobile Menu Toggle Button */}
+          <button
+            onClick={() => setMobileOpen((v) => !v)}
+            className="md:hidden p-2 rounded-xl text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 transition"
+            aria-label="Toggle Navigation"
+          >
+            {mobileOpen ? <FiX size={22} /> : <FiMenu size={22} />}
+          </button>
+
         </div>
       </nav>
+
+      {/* Mobile Navigation Drawer */}
+      {mobileOpen && (
+        <div className="md:hidden border-t border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-4 py-3 space-y-2">
+          <Link
+            href="/"
+            onClick={() => setMobileOpen(false)}
+            className="block py-2 text-sm font-medium text-slate-700 dark:text-zinc-200 hover:text-indigo-600"
+          >
+            Home
+          </Link>
+          <Link
+            href="/room"
+            onClick={() => setMobileOpen(false)}
+            className="block py-2 text-sm font-medium text-slate-700 dark:text-zinc-200 hover:text-indigo-600"
+          >
+            Rooms
+          </Link>
+          {user && (
+            <>
+              <Link
+                href="/addrooms"
+                onClick={() => setMobileOpen(false)}
+                className="block py-2 text-sm font-medium text-slate-700 dark:text-zinc-200 hover:text-indigo-600"
+              >
+                Add Room
+              </Link>
+              <Link
+                href="/my-listing"
+                onClick={() => setMobileOpen(false)}
+                className="block py-2 text-sm font-medium text-slate-700 dark:text-zinc-200 hover:text-indigo-600"
+              >
+                My Listings
+              </Link>
+              <Link
+                href="/mybookings"
+                onClick={() => setMobileOpen(false)}
+                className="block py-2 text-sm font-medium text-slate-700 dark:text-zinc-200 hover:text-indigo-600"
+              >
+                My Bookings
+              </Link>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 };

@@ -284,10 +284,13 @@ const handleCancel = async () => {
         {/* RIGHT */}
         <div className="w-full lg:w-72 space-y-4">
           <div className="bg-white dark:bg-zinc-900 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-zinc-800 text-center">
-            <img
+            <Image
               src={user?.image || "https://placehold.co/96x96"}
               className="w-20 h-20 rounded-full mx-auto object-cover ring-2 ring-indigo-200"
-              alt={user?.name}
+              alt={user?.name || "User profile"}
+              width={80}
+              height={80}
+              unoptimized
             />
             <h2 className="mt-3 font-bold text-lg">{user?.name}</h2>
             <p className="text-sm text-slate-400 flex justify-center items-center gap-1 mt-1">
