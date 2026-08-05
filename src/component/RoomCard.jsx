@@ -33,7 +33,7 @@ const RoomCard = ({ room }) => {
           className="object-cover"
           unoptimized
         />
-        <span className="absolute top-3 right-3 bg-indigo-600 text-white text-xs font-semibold px-2.5 py-1 rounded-full">
+        <span className="absolute top-3 right-3 bg-indigo-600 text-white text-xs font-semibold px-2.5 py-1 rounded-full shadow-md">
           ${hourlyRate || 0}/hr
         </span>
       </div>
@@ -67,9 +67,9 @@ const RoomCard = ({ room }) => {
 
         {safeAmenities.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
-            {visibleAmenities.map((item) => (
+            {visibleAmenities.map((item, i) => (
               <span
-                key={item}
+                key={`${item}-${i}`}
                 className="text-xs px-2.5 py-1 rounded-full bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800"
               >
                 {item}
@@ -83,10 +83,11 @@ const RoomCard = ({ room }) => {
           </div>
         )}
 
-        <Link href={`/room/${_id}`} className="mt-auto">
-          <button className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium transition-colors">
-            View Details
-          </button>
+        <Link
+          href={`/room/${_id}`}
+          className="mt-auto block w-full py-2.5 text-center rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium transition-colors"
+        >
+          View Details
         </Link>
 
       </div>
